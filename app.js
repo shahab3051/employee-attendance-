@@ -8,7 +8,7 @@
 const CONFIG = {
   // Replace with your deployed Apps Script Web App URL
   // (Deploy > New deployment > Web app > Execute as: Me > Who has access: Anyone)
-  API_URL: 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbw38oxt4sxYOhvFZbtHC8RU1pKiy-uz26t2KovvVr_upfAqOXfqbVYLtE8t5QEOJeAR/exec',
   // How often to poll for live attendance while a relevant page is open (ms)
   LIVE_POLL_MS: 30000
 };
