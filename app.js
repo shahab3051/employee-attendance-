@@ -8,7 +8,7 @@
 const CONFIG = {
   // Replace with your deployed Apps Script Web App URL
   // (Deploy > New deployment > Web app > Execute as: Me > Who has access: Anyone)
-  API_URL: 'https://script.google.com/macros/s/AKfycbw38oxt4sxYOhvFZbtHC8RU1pKiy-uz26t2KovvVr_upfAqOXfqbVYLtE8t5QEOJeAR/exec',
+  API_URL: 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec',
   // How often to poll for live attendance while a relevant page is open (ms)
   LIVE_POLL_MS: 30000
 };
@@ -105,13 +105,63 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
   document.getElementById('appShell').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   loginForm.reset();
+  startLoginCarousel();
 });
+
+/* ---------- login screen illustration carousel ---------- */
+const LOGIN_SLIDES = [
+  { img: 'img/slide-attendance.png', caption: 'Live attendance, confirmed instantly' },
+  { img: 'img/slide-data.png', caption: 'Payroll & reports, all in one place' },
+  { img: 'img/slide-onboarding.png', caption: 'Effortless onboarding for your team' }
+];
+const CAROUSEL_INTERVAL_MS = 4200;
+let carouselIndex = 0, carouselTimer = null;
+
+function renderLoginCarousel() {
+  const carousel = document.getElementById('loginCarousel');
+  const dots = document.getElementById('loginDots');
+  carousel.innerHTML = LOGIN_SLIDES.map((s, i) => `
+    <div class="login-slide${i === 0 ? ' active' : ''}" data-i="${i}">
+      <img src="${s.img}" alt="${escapeHtml(s.caption)}">
+      <div class="slide-caption">${escapeHtml(s.caption)}</div>
+    </div>`).join('');
+  dots.innerHTML = LOGIN_SLIDES.map((_, i) => `<button data-i="${i}" class="${i === 0 ? 'active' : ''}" aria-label="Slide ${i + 1}"></button>`).join('');
+  dots.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => goToCarouselSlide(Number(btn.dataset.i), true));
+  });
+}
+
+function goToCarouselSlide(i, userInitiated) {
+  const prev = carouselIndex;
+  carouselIndex = (i + LOGIN_SLIDES.length) % LOGIN_SLIDES.length;
+  document.querySelectorAll('#loginCarousel .login-slide').forEach(el => {
+    const idx = Number(el.dataset.i);
+    el.classList.toggle('active', idx === carouselIndex);
+    el.classList.toggle('exit-left', idx === prev && idx !== carouselIndex);
+  });
+  document.querySelectorAll('#loginDots button').forEach(el => el.classList.toggle('active', Number(el.dataset.i) === carouselIndex));
+  if (userInitiated) restartLoginCarousel();
+}
+
+function startLoginCarousel() {
+  renderLoginCarousel();
+  restartLoginCarousel();
+}
+function restartLoginCarousel() {
+  stopLoginCarousel();
+  carouselTimer = setInterval(() => goToCarouselSlide(carouselIndex + 1, false), CAROUSEL_INTERVAL_MS);
+}
+function stopLoginCarousel() { if (carouselTimer) clearInterval(carouselTimer); carouselTimer = null; }
+
+document.getElementById('carouselPrev').addEventListener('click', () => goToCarouselSlide(carouselIndex - 1, true));
+document.getElementById('carouselNext').addEventListener('click', () => goToCarouselSlide(carouselIndex + 1, true));
 
 /* ---------- app entry / role setup ---------- */
 function enterApp() {
   const session = Session.get();
   if (!session) return;
 
+  stopLoginCarousel();
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appShell').classList.remove('hidden');
 
@@ -701,5 +751,7 @@ function escapeHtml(str) {
   const session = Session.get();
   if (session && session.token) {
     enterApp();
+  } else {
+    startLoginCarousel();
   }
 })();
